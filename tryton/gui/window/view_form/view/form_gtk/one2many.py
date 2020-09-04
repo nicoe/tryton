@@ -579,11 +579,10 @@ class One2Many(Widget):
             return False
         new_group = self.field.get_client(self.record)
 
-        if (self.attrs.get('group') and self.attrs.get('mode') == 'form'
-                and not new_group):
+        if self.attrs.get('group') and self.attrs.get('mode') == 'form':
             if self.screen.current_record is None:
                 self.invisible_set(True)
-        if id(self.screen.group) != id(new_group):
+        elif id(self.screen.group) != id(new_group):
             self.screen.group = new_group
             if (self.screen.current_view.view_type == 'tree') \
                     and self.screen.current_view.editable:
