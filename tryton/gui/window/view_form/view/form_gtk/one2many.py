@@ -181,8 +181,10 @@ class One2Many(Widget):
 
         vbox.pack_start(self.screen.widget, expand=True, fill=True, padding=0)
 
-        self.title.set_mnemonic_widget(
-            self.screen.current_view.mnemonic_widget)
+        if self.screen.current_view and hasattr(
+                self.screen.current_view, 'mnemonic_widget'):
+            self.title.set_mnemonic_widget(
+                self.screen.current_view.mnemonic_widget)
 
         self.screen.widget.connect('key_press_event', self.on_keypress)
         if self.attrs.get('add_remove'):
@@ -247,7 +249,8 @@ class One2Many(Widget):
     def switch_view(self, widget):
         self.screen.switch_view()
 
-        mnemonic_widget = self.screen.current_view.mnemonic_widget
+        mnemonic_widget = self.screen.current_view.mnemonic_widget if \
+            self.screen.current_view else None
         string = self.attrs.get('string', '')
         if mnemonic_widget:
             string = set_underline(string)
@@ -376,8 +379,9 @@ class One2Many(Widget):
                     or not widget.visible
                     or not hasattr(widget, 'screen')):
                 continue
-            if (widget.screen.current_view.view_type == 'form'
-                    or widget.screen.current_view.editable and
+            if ((widget.screen.current_view and
+                    (widget.screen.current_view.view_type == 'form'
+                    or widget.screen.current_view.editable)) and
                     not widget.screen.editable_open_get()):
                 widget.screen.new()
                 widget.screen.current_view.widget.set_sensitive(True)
@@ -592,8 +596,9 @@ class One2Many(Widget):
         if (id(self.screen.group) != id(new_group)
                 and self.screen.model_name == new_group.model_name):
             self.screen.group = new_group
-            if (self.screen.current_view.view_type == 'tree') \
-                    and self.screen.current_view.editable:
+            if self.screen.current_view and
+                    (self.screen.current_view.view_type == 'tree') and
+                    self.screen.current_view.editable:
                 self.screen.current_record = None
         domain = []
         size_limit = None
@@ -612,11 +617,12 @@ class One2Many(Widget):
         return True
 
     def set_value(self):
-        if (self.screen.current_view.view_type == 'form'
-                and self.attrs.get('group')
-                and self.screen.model_name != self.record.model_name):
-            return True
-        self.screen.current_view.set_value()
+        if self.screen.current_view:
+            if (self.screen.current_view.view_type == 'form'
+                    and self.attrs.get('group')
+                    and self.screen.model_name != self.record.model_name):
+                return True
+            self.screen.current_view.set_value()
         if self.screen.modified():  # TODO check if required
             self.record.modified_fields.setdefault(self.field.name)
             self.record.signal('record-modified')
